@@ -1,0 +1,30 @@
+// Log the URLs we need
+server.log("Red Alert: " + http.agenturl() + "?alrt=0");
+server.log("Amber Alert: " + http.agenturl() + "?alrt=1");
+server.log("All Clear: " + http.agenturl() + "?alrt=2");
+
+function requestHandler(request, response) {
+  try {
+    // check if the user sent led as a query parameter
+    if ("alrt" in request.query) {
+      
+      // if they did, and led=1.. set our variable to 1
+      if (request.query.alrt == "0" || request.query.alrt == "1" || request.query.alrt == "2" || request.query.alrt == "9") {
+        // convert the led query parameter to an integer
+        local alertState = request.query.alrt.tointeger();
+ 
+        // send "led" message to device, and send ledState as the data
+        device.send("setAlert", alertState); 
+        server.log("Alert state is " + alertState);
+      }
+    }
+    // send a response back saying everything was OK.
+    response.send(200, "OK");
+  } catch (ex) {
+    response.send(500, "Internal Server Error: " + ex);
+  }
+}
+ 
+// Reqister the handler to deal with incoming requests
+ 
+http.onrequest(requestHandler);

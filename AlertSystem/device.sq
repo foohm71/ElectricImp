@@ -1,0 +1,133 @@
+// Device Code
+ 
+#require "WS2812.class.nut:1.0.0"
+ 
+// CONSTANTS
+ 
+const NUMPIXELS = 5
+const DELAY = 0.1
+
+// Instantiate the WS2812s
+ 
+local spi = hardware.spi257
+spi.configure(MSB_FIRST, 7500)
+local pixels = WS2812(spi, NUMPIXELS)
+    
+local redVal = 0
+local greenVal = 0
+local blueVal = 0
+ 
+local redDelta = 1
+local greenDelta = 1
+local blueDelta = 1
+ 
+local redOn = true
+local greenOn = false
+local blueOn = false
+ 
+local timer = null
+local pixel = 0
+local pDelta = 1
+
+local blinkState = 0
+local blinkWakeup = null; 
+
+ 
+function redAlert(dummy)
+{
+   blink()    
+}
+
+function blink()
+{
+    for (local i = 0 ; i < NUMPIXELS ; i++)
+    {
+        if (blinkState == 1)
+        {
+            pixels.writePixel(i, [255, 0, 0])
+        } else {
+            pixels.writePixel(i, [0, 0, 0])
+        }
+    }
+    
+    pixels.writeFrame()
+
+    blinkState = 1 - blinkState
+    
+    blinkWakeup = imp.wakeup(DELAY,blink)
+}
+
+function amberAlert(dummy)
+{
+    for (local i = 0 ; i < NUMPIXELS ; i++)
+    {
+        pixels.writePixel(i, [100, 50, 0])
+    }
+    
+    pixels.writeFrame()
+
+}
+
+function allClear(dummy)
+{
+    for (local i = 0 ; i < NUMPIXELS ; i++)
+    {
+        pixels.writePixel(i, [0, 50, 0])
+    }
+    
+    pixels.writeFrame()
+
+}
+
+function clearAll(dummy)
+{
+    for (local i = 0 ; i < NUMPIXELS ; i++)
+    {
+        pixels.writePixel(i, [0, 0, 0])
+    }
+    
+    pixels.writeFrame()
+
+}
+ 
+function setAlert(alrt)
+{
+    if (blinkWakeup != null) {
+        imp.cancelwakeup(blinkWakeup);
+    }
+    
+    switch (alrt)
+    {
+        case 0:
+            redAlert(true)
+            break
+    
+        case 1:
+            amberAlert(true)
+            break
+        
+        case 2:
+            allClear(true)
+            break
+
+        case 9:
+            clearAll(true)
+            break
+
+    }
+
+}
+
+// START OF PROGRAM
+ 
+// Register handlers for messages from the agent
+ 
+
+agent.on("setAlert", setAlert)
+ 
+// Pick a random effect to begin with
+ 
+// redAlert(true)
+// amberAlert(true)
+// allClear(true)
+// setAlert(2)
